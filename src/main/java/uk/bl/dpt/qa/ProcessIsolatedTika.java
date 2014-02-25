@@ -67,7 +67,7 @@ public class ProcessIsolatedTika {
 	// Initialise in case of running from Eclipse
 	private String TIKA_VERSION = "1.5";
 	private String TIKA_JAR;
-	private File gLocalJar;
+	private File gLocalJar = null;
 	private ToolRunner gRunner;
 	private boolean gRunning = false;
 	private Response gResponse;
@@ -94,6 +94,8 @@ public class ProcessIsolatedTika {
 	 * Extract the tika-server jar and prepare for execution
 	 */
 	private void init() {
+		
+		if(gLocalJar!=null) return;
 		
 		// get tika version from manifest file
 		InputStream manifest = ProcessIsolatedTika.class.getClassLoader().getResourceAsStream(MANIFEST);
