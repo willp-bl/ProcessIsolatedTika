@@ -250,6 +250,8 @@ public class ProcessIsolatedTika {
 	 */
 	public boolean parse(final InputStream pInputStream, Metadata pMetadata) {
 
+		boolean ret = true;
+		
 		if(!gRunner.isRunning()) {
 			gLogger.error("Tika-Server is not running");
 			return false;
@@ -276,12 +278,15 @@ public class ProcessIsolatedTika {
 			task.get(TIMEOUT_SECS*1000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			gLogger.trace("InterruptedException: "+e);
+			ret = false;
 			restart();
 		} catch (ExecutionException e) {
 			gLogger.trace("ExecutionException: "+e);
+			ret = false;
 			restart();
 		} catch (TimeoutException e) {
 			gLogger.trace("TimeoutException: "+e);
+			ret = false;
 			restart();
 		}
 		
@@ -296,6 +301,7 @@ public class ProcessIsolatedTika {
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
+					ret = false;
 				} finally {
 					if(reader!=null) {
 						try {
@@ -307,11 +313,13 @@ public class ProcessIsolatedTika {
 					}
 				}
 			}
+		} else {
+			ret = false;
 		}
 
 		gLogger.trace("Metadata entries: "+pMetadata.names().length);
 				
-		return false;
+		return ret;
 	}
 	
 	/**
