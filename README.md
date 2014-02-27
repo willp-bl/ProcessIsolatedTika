@@ -8,3 +8,10 @@ This project runs a background process/JVM for tika-server to isolate its execut
 A copy of a tika-server jar will be contained within this jar and is copied to a temporary folder for background execution.
 
 If a call to the tika-server takes longer than 10 seconds (by default) the tika-server is restarted.
+
+Benefits
+--------
+
+A tika-server is already running in the background and there is no JVM start cost.  Communication with tika-server is encapsulated within this class.  Speed should be close to pure-Java combined with networking overhead for JAXRS.
+
+A crash of the tika-server should not take out the controlling JVM.
