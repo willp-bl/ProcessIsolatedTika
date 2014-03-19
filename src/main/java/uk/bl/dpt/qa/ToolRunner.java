@@ -98,7 +98,8 @@ public class ToolRunner {
 						try{
 							byteArrayStdout.write(stdout.read());
 						} catch(IOException e2) {
-							e2.printStackTrace();// 
+							// Ignore errors
+							//e2.printStackTrace();// 
 						}
 					}
 				}

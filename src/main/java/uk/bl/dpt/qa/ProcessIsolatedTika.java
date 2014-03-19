@@ -140,37 +140,40 @@ public class ProcessIsolatedTika {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		boolean copied = false;
+		boolean found = false;
 		InputStream jar = ProcessIsolatedTika.class.getClassLoader().getResourceAsStream(TIKA_JAR);
 		if(jar!=null) {
-			gLogger.trace("Found server jar: /");
+			gLogger.info("Found server jar: /");
 			//Tools.copyStreamToFile(jar, gLocalJar);
-			copied = true;
+			found = true;
 		} 
-		if(!copied) {
+		if(!found) {
 			jar = ProcessIsolatedTika.class.getClassLoader().getResourceAsStream("lib/"+TIKA_JAR);
 			if(jar!=null) {
-				gLogger.trace("Found server jar: lib/");
+				gLogger.info("Found server jar: lib/");
 				//Tools.copyStreamToFile(jar, gLocalJar);
-				copied = true;
+				found = true;
 			} 
 		}
-		if(!copied) {	
+		if(!found) {	
 			final String JARFILE = "target/resources/"+TIKA_JAR;
 			try {
 				jar = new FileInputStream(JARFILE);
-				gLogger.trace("Found jar in filesystem");
+				gLogger.info("Found jar in filesystem");
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
-				gLogger.trace("Cannot find jar");
+				gLogger.info("Cannot find jar");
 				e.printStackTrace();
 			}
 			//IOUtils.copy(new FileInputStream(new File(JARFILE)), new FileOutputStream(gLocalJar));
-			copied = true;
+			found = true;
 		}
 		
 		try {
-			IOUtils.copy(jar, new FileOutputStream(gLocalJar));
+			FileOutputStream fos = new FileOutputStream(gLocalJar); 
+			IOUtils.copy(jar, fos);
+			fos.close();
+			jar.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -181,7 +184,7 @@ public class ProcessIsolatedTika {
 		
 		gLocalJar.deleteOnExit();
 		
-		gLogger.trace("Temp jar: "+gLocalJar.getAbsolutePath()+", size: "+gLocalJar.length());
+		gLogger.info("Temp jar: "+gLocalJar.getAbsolutePath()+", size: "+gLocalJar.length());
 		
 	}
 	
@@ -195,7 +198,7 @@ public class ProcessIsolatedTika {
 			commandLine.add(s);
 		}
 		
-		gLogger.trace("Starting: "+commandLine);
+		gLogger.info("Starting: "+commandLine);
 		
 		gRunner = new ToolRunner();
 		try {
@@ -226,7 +229,7 @@ public class ProcessIsolatedTika {
 		
 		if(!gRunning) return;
 		
-		gLogger.trace("Stopping...");
+		gLogger.info("Stopping...");
 		gRunner.stop();
 		
 		gRunning = false;
@@ -277,15 +280,15 @@ public class ProcessIsolatedTika {
 		try {
 			task.get(TIMEOUT_SECS*1000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
-			gLogger.trace("InterruptedException: "+e);
+			gLogger.info("InterruptedException: "+e);
 			ret = false;
 			restart();
 		} catch (ExecutionException e) {
-			gLogger.trace("ExecutionException: "+e);
+			gLogger.info("ExecutionException: "+e);
 			ret = false;
 			restart();
 		} catch (TimeoutException e) {
-			gLogger.trace("TimeoutException: "+e);
+			gLogger.info("TimeoutException: "+e);
 			ret = false;
 			restart();
 		}
@@ -317,7 +320,7 @@ public class ProcessIsolatedTika {
 			ret = false;
 		}
 
-		gLogger.trace("Metadata entries: "+pMetadata.names().length);
+		gLogger.info("Metadata entries: "+pMetadata.names().length);
 				
 		return ret;
 	}
@@ -333,7 +336,7 @@ public class ProcessIsolatedTika {
 
 		if(!pFile.exists()) return false;
 
-		gLogger.trace("Processing: "+pFile);
+		gLogger.info("Processing: "+pFile);
 
 		if(pMetadata.get(Metadata.RESOURCE_NAME_KEY)!=null) {
 			pMetadata.set(Metadata.RESOURCE_NAME_KEY, pFile.getAbsolutePath());
