@@ -72,6 +72,7 @@ public class ProcessIsolatedTika {
 	private Response gResponse;
 
 	private int TIKA_SERVER_PORT = 9998;
+	private final String TIKA_LOCAL_HOST = "127.0.0.1";
 
 	///////////////////////////////////////////////////////////
 	// Constructor
@@ -82,6 +83,8 @@ public class ProcessIsolatedTika {
 	 */
 	public ProcessIsolatedTika() {
 		init();
+		// Prefer IPv4 over IPv6
+		System.setProperty("java.net.preferIPv4Stack" , "true");
 		start();
 	}
 	
@@ -194,7 +197,7 @@ public class ProcessIsolatedTika {
 	private void start(int pPort) {
 
 		ArrayList<String> commandLine = new ArrayList<String>();
-		for(String s: new String[] { "java", "-jar", gLocalJar.getAbsolutePath(), "-p", Integer.toString(pPort) }) {
+		for(String s: new String[] { "java", "-Djava.net.preferIPv4Stack=true", "-jar", gLocalJar.getAbsolutePath(), "-p", Integer.toString(pPort) }) {
 			commandLine.add(s);
 		}
 		
@@ -204,6 +207,14 @@ public class ProcessIsolatedTika {
 		try {
 			gRunner.start(commandLine);
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Allow time for Tika to get started otherwise we get into a mess
+		try {
+			Thread.sleep(5*1000);
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -261,7 +272,9 @@ public class ProcessIsolatedTika {
 		}
 		
 		final String TIKA_PATH = "/meta";
-		final String END_POINT = "http://localhost:"+TIKA_SERVER_PORT;
+		final String END_POINT = "http://"+TIKA_LOCAL_HOST+":"+TIKA_SERVER_PORT;
+		
+		gLogger.trace("Server: "+END_POINT+TIKA_PATH);
 		
 		FutureTask<Integer> task = new FutureTask<Integer>(new Callable<Integer>() {
 			@Override
@@ -361,6 +374,13 @@ public class ProcessIsolatedTika {
 		pit.parse(new File("doc.doc"), new Metadata());
 		pit.parse(new File("corrupt.mp3"), new Metadata());
 		pit.parse(new File("v1.pdf"), new Metadata());
+		try {
+			System.out.println("Press any key to exit");
+			System.in.read();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		pit.stop();
 	}
 	
