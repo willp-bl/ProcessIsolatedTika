@@ -36,7 +36,6 @@ import org.apache.tika.io.IOUtils;
 import org.apache.tika.metadata.Metadata;
 
 import javax.ws.rs.core.Response;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.cxf.jaxrs.client.WebClient;
@@ -212,14 +211,58 @@ public class ProcessIsolatedTika {
 		}
 		
 		// Allow time for Tika to get started otherwise we get into a mess
-		try {
-			Thread.sleep(5*1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		blockUntilStarted();
 		
 		gRunning = true;
+		
+	}
+		
+	// keep checking until we receive the version number from Tika
+	private void blockUntilStarted() {
+		final String TIKA_PATH = "/version";
+		final String END_POINT = "http://"+TIKA_LOCAL_HOST+":"+TIKA_SERVER_PORT;
+		
+		gLogger.trace("Waiting for tika-server to initialise ("+END_POINT+TIKA_PATH+")");
+
+		boolean ready = false;
+		final long startTime = System.currentTimeMillis();
+		final int timeStepMS = 100;
+		
+		while(!ready) {
+			try {
+				Response response = WebClient.create(END_POINT+TIKA_PATH)
+						.get();
+				
+				if(response.getStatus()==Response.Status.OK.getStatusCode()) {
+					// if we got a good response then we should be up and running
+					ready = true;
+				}
+			} catch (Exception e) {
+				
+			} 
+			try {
+				Thread.sleep(timeStepMS);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+			}
+		
+			if((System.currentTimeMillis()-startTime)>120*1000) {
+				gLogger.error("tika-server failed to start");
+				break;
+			}
+			
+		}
+
+		// One more second, for good luck
+		try {
+			Thread.sleep(timeStepMS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+		}
+		
+		gLogger.info("Server up and running in "+(System.currentTimeMillis()-startTime)+"ms");
 		
 	}
 	
