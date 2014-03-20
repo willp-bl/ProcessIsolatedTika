@@ -24,5 +24,3 @@ Notes
 * To change Tika version you just need to change it once in the pom.  However, if you are reusing this as a library and this jar's manifest is changes then you need to ensure that the version in the class matches the pom.
 
 * Also - this library blocks until the tika-server is started (or it has waited 120s).  During this time unwanted stack traces are printed to the log at WARN level but we set JAXRS to ERROR (see log4j.properties)
-
-* At the moment several copies of tika-server.jar may be contained in projects depending on this library depending on how they are built

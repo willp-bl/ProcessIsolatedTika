@@ -32,10 +32,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.log4j.Logger;
+import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.IOUtils;
 import org.apache.tika.metadata.Metadata;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.cxf.jaxrs.client.WebClient;
@@ -231,6 +234,8 @@ public class ProcessIsolatedTika {
 		while(!ready) {
 			try {
 				Response response = WebClient.create(END_POINT+TIKA_PATH)
+						.type(MediaType.TEXT_PLAIN)
+						.accept(MediaType.TEXT_PLAIN)
 						.get();
 				
 				if(response.getStatus()==Response.Status.OK.getStatusCode()) {
@@ -325,7 +330,8 @@ public class ProcessIsolatedTika {
 
 				gResponse = WebClient.create(END_POINT+TIKA_PATH)
 						.accept("text/csv")
-						.put(pInputStream);
+						// protect the stream from being closed
+						.put(new CloseShieldInputStream(pInputStream));
 
 				return null;
 			}});
