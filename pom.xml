@@ -4,7 +4,7 @@
 	<groupId>uk.bl.dpt.qa</groupId>
 	<artifactId>processisolatedtika</artifactId>
 	<packaging>jar</packaging>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.3</version>
 	<name>processisolatedtika</name>
 	<properties>
 		<mainclass>uk.bl.dpt.qa.ProcessIsolatedTika</mainclass>
