@@ -324,12 +324,16 @@ public class ProcessIsolatedTika {
 		
 		gLogger.trace("Server: "+END_POINT+TIKA_PATH);
 		
+		final String detectedType = pMetadata.get(Metadata.CONTENT_TYPE); 
+		
 		FutureTask<Integer> task = new FutureTask<Integer>(new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
 
 				gResponse = WebClient.create(END_POINT+TIKA_PATH)
 						.accept("text/csv")
+						// give the parsers a hint
+						.type(detectedType)
 						// protect the stream from being closed
 						.put(new CloseShieldInputStream(pInputStream));
 
