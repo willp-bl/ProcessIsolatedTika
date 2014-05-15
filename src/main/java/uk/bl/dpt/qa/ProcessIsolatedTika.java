@@ -38,6 +38,7 @@ import org.apache.tika.metadata.Metadata;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -310,7 +311,7 @@ public class ProcessIsolatedTika {
 	 * @param pOutputStream output to write data to
 	 * @return true if processed ok, false if execution was terminated
 	 */
-	public boolean parse(final InputStream pInputStream, Metadata pMetadata) {
+	public boolean parse(final InputStream pInputStream, final Metadata pMetadata) {
 
 		boolean ret = true;
 		
@@ -357,34 +358,42 @@ public class ProcessIsolatedTika {
 			gLogger.info("TimeoutException: "+e);
 			ret = false;
 			restart();
-		}
+		} 
 		
 		if(gResponse!=null) {
-			if(gResponse.getEntity() instanceof InputStream) {
-				BufferedReader reader = new BufferedReader(new InputStreamReader((InputStream)gResponse.getEntity()));
-				try {
-					Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(reader);
-					for(CSVRecord record:records) {
-						pMetadata.add(record.get(0), record.get(1));
-					}
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-					ret = false;
-				} finally {
-					if(reader!=null) {
-						try {
-							reader.close();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+			if(gResponse.getStatus()==Status.UNSUPPORTED_MEDIA_TYPE.getStatusCode()) {
+				// the server may return HTTP 415 (unsupported) if it won't accept the mimetype
+				// handle this issue here
+				// add some text to the output
+				// FIXME: maybe change mimetype for a more visible error?
+				pMetadata.add("parseFailure415", "true");
+				gLogger.error("Parse Failure: HTTP 415 (format unsupported for parsing)");
+			} else {
+				if(gResponse.getEntity() instanceof InputStream) {
+					InputStream is = (InputStream)gResponse.getEntity();
+					BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+					try {
+						Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(reader);
+						for(CSVRecord record:records) {
+							pMetadata.add(record.get(0), record.get(1));
+						}
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+						ret = false;
+					} finally {
+						if(reader!=null) {
+							try {
+								reader.close();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 					}
 				}
 			}
-		} else {
-			ret = false;
-		}
+		} 
 
 		gLogger.info("Metadata entries: "+pMetadata.names().length);
 				
